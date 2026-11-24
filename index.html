@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0F5C55">
+<title>診察メモ</title>
+<style>
+:root{--bg:#F4F7F6;--sf:#fff;--sub:#EEF2F1;--tx:#1A2421;--mu:#4A5D57;--bd:#CBD5D1;--pr:#0F5C55;--pl:#E6F3F1;--dg:#7F1D1D;--dgb:#FFF5F5;--dgd:#E5989B}
+@media(prefers-color-scheme:dark){:root{--bg:#121816;--sf:#1B2421;--sub:#232E2A;--tx:#E8EEEC;--mu:#A5B5AF;--bd:#3A4944;--pr:#4DB6AC;--pl:#1F3A36;--dg:#FFB4B4;--dgb:#3A1F1F;--dgd:#8A4A4A}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.6 -apple-system,"Hiragino Sans","Yu Gothic UI","Noto Sans JP",sans-serif}
+#app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+header{padding:12px 16px;border-bottom:1px solid var(--bd);background:var(--sf)}
+header h1{margin:0;font-size:18px}
+header p{margin:0;font-size:13px;color:var(--mu)}
+main{flex:1;padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.sub{background:var(--sub);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px}
+h2{margin:0;font-size:16px}
+.mu{margin:0;font-size:14px;color:var(--mu)}
+.btn{min-height:44px;padding:8px 12px;border-radius:12px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);font:600 15px inherit;font-family:inherit;cursor:pointer}
+.btn.on,.btn.pri{background:var(--pr);border-color:var(--pr);color:#fff}
+.btn.del{color:var(--dg);border-color:var(--dgd)}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.row{display:flex;gap:8px;align-items:center}
+.row>*{flex:1}
+input,select,textarea{width:100%;min-height:44px;padding:10px;font:16px inherit;font-family:inherit;color:var(--tx);background:var(--sf);border:1px solid var(--bd);border-radius:12px}
+textarea{min-height:90px}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--sf);border-top:1px solid var(--bd);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom)}
+nav div{display:grid;grid-template-columns:repeat(4,1fr);width:100%;max-width:520px;padding:4px}
+nav button{min-height:48px;border:0;background:none;color:var(--mu);font:600 15px inherit;font-family:inherit;border-radius:10px}
+nav button.on{background:var(--pl);color:var(--pr)}
+.danger{background:var(--dgb);border:2px solid var(--dgd);border-radius:14px;padding:14px;color:var(--tx)}
+.danger a{color:var(--dg);font-weight:700}
+pre{white-space:pre-wrap;word-break:break-word;font:15px/1.7 inherit;font-family:inherit;margin:0}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1E293B;color:#fff;padding:10px 16px;border-radius:99px;font-size:15px;z-index:9}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div id="app">
+<header><h1 id="ht">診察メモ</h1><p>診断・治療の助言ではなく、本人の記録整理用です。データはこの端末内にのみ保存されます。</p></header>
+<main id="main"></main>
+</div>
+<div id="toast" class="hidden"></div>
+<nav><div id="nav"></div></nav>
+<script>
+const KEY='shinsatsu-memo-v2';
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const addDays=(s,n)=>{const d=new Date(s+'T00:00:00');d.setDate(d.getDate()+n);return ymd(d)};
+const diff=(a,b)=>Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/864e5);
+const fmt=s=>{const p=s.split('-');return `${+p[1]}/${+p[2]}`};
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const num=v=>typeof v==='number'&&isFinite(v);
+const today=()=>ymd(new Date());
+
+let data={records:{},chief:'',questions:'',lastVisit:'',share:{}};
+try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)data=Object.assign(data,s)}catch(e){}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){toast('保存できませんでした（プライベートモードの可能性）')}}
+
+const FIELDS=[['distress','全体的なつらさ'],['anxiety','不安の強さ'],['mood','気分の落ち込み'],['stomach','胃の不快感']];
+const blank=()=>({distress:null,anxiety:null,mood:null,stomach:null,loop:null,sleep:null,med:null,note:''});
+let tab='rec',cur=today(),draft=blank(),crisis=false;
+loadDraft();
+
+function loadDraft(){draft=Object.assign(blank(),data.records[cur]||{})}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.remove('hidden');clearTimeout(window._t);window._t=setTimeout(()=>t.classList.add('hidden'),2500)}
+function go(t){tab=t;render();window.scrollTo(0,0)}
+
+function render(){
+  const titles={rec:'記録する',hist:'履歴',rep:'診察前レポート',set:'設定'};
+  document.getElementById('ht').textContent=titles[tab];
+  document.getElementById('nav').innerHTML=[['rec','記録'],['hist','履歴'],['rep','レポート'],['set','設定']]
+    .map(([k,l])=>`<button class="${tab===k?'on':''}" onclick="go('${k}')">${l}</button>`).join('');
+  document.getElementById('main').innerHTML={rec:vRec,hist:vHist,rep:vRep,set:vSet}[tab]();
+}
+
+/* ---------- 記録 ---------- */
+function vRec(){
+  const exists=!!data.records[cur];
+  return `
+  ${crisis?crisisBox():''}
+  <section class="card">
+    <label class="mu" for="d">記録する日</label>
+    <input id="d" type="date" max="${today()}" value="${cur}" onchange="changeDate(this.value)">
+    <p class="mu">${exists?'この日は記録済みです（上書き保存されます）':'この日はまだ記録がありません'}。書ける項目だけで大丈夫です。未選択は「未入力」として扱われ、0（なし）とは区別されます。</p>
+    ${FIELDS.map(([k,l])=>`
+      <div class="sub"><div class="row"><b>${l}</b><span class="mu" style="text-align:right">${num(draft[k])?draft[k]+' / 4':'未入力'}</span></div>
+      <div class="g5">${[0,1,2,3,4].map(n=>`<button class="btn ${draft[k]===n?'on':''}" onclick="setScale('${k}',${n})">${n}</button>`).join('')}</div></div>`).join('')}
+    <p class="mu">0＝なし　4＝とてもつらい。もう一度押すと未入力に戻ります。</p>
+    <label class="mu" for="lp">思考ループ（同じ考えが頭を回る）</label>
+    <select id="lp" onchange="draft.loop=this.value===''?null:this.value==='1'">
+      <option value="" ${draft.loop===null?'selected':''}>未入力</option>
+      <option value="1" ${draft.loop===true?'selected':''}>あり</option>
+      <option value="0" ${draft.loop===false?'selected':''}>なし</option></select>
+    <label class="mu" for="sl">睡眠時間（時間）</label>
+    <input id="sl" type="number" inputmode="decimal" step="0.5" min="0" max="24" placeholder="例：6.5" value="${num(draft.sleep)?draft.sleep:''}" oninput="const v=parseFloat(this.value);draft.sleep=isNaN(v)?null:v">
+    <label class="mu" for="md">服薬</label>
+    <select id="md" onchange="draft.med=this.value||null">
+      ${['','飲めた','飲み忘れた','対象外・なし'].map(o=>`<option value="${o}" ${(draft.med||'')===o?'selected':''}>${o||'未入力'}</option>`).join('')}</select>
+    <label class="mu" for="nt">自由メモ（原文のまま保存）</label>
+    <textarea id="nt" placeholder="気になったこと、先生に伝えたいこと" oninput="draft.note=this.value">${esc(draft.note)}</textarea>
+    <button class="btn pri" onclick="saveRec()">保存する</button>
+  </section>
+  <details class="card"><summary><b>つらいときの相談先</b></summary>${crisisBody()}</details>`;
+}
+function crisisBody(){return `<p class="mu">命の危険を感じるときは <a href="tel:119">119</a>（救急）や <a href="tel:110">110</a>。通院先にも連絡してください。</p>
+<p class="mu">#いのちSOS <a href="tel:0120061338">0120-061-338</a><br>よりそいホットライン <a href="tel:0120279338">0120-279-338</a><br>受付時間などは厚生労働省「まもろうよ こころ」で最新情報をご確認ください。</p>`}
+function crisisBox(){return `<section class="danger" role="alert"><b>つらい気持ちが書かれていました。</b><p style="margin:6px 0">ひとりで抱えず、誰かに話してください。このアプリは緊急対応を行えません。</p>${crisisBody()}</section>`}
+function changeDate(v){if(!v)return;cur=v;loadDraft();crisis=false;render()}
+function setScale(k,n){draft[k]=draft[k]===n?null:n;render()}
+function saveRec(){
+  const empty=FIELDS.every(([k])=>!num(draft[k]))&&draft.loop===null&&!num(draft.sleep)&&!draft.med&&!draft.note.trim();
+  if(empty){toast('何も入力されていません');return}
+  data.records[cur]=Object.assign({},draft,{note:draft.note.trim()});
+  persist();
+  crisis=/死にたい|消えたい|消えてしまいたい|いなくなりたい|自殺/.test(draft.note);
+  toast(fmt(cur)+'の記録を保存しました');
+  if(crisis){render();window.scrollTo(0,0)}else{cur=today();loadDraft();go('hist')}
+}
+
+/* ---------- 履歴 ---------- */
+function vHist(){
+  const ds=Object.keys(data.records).sort().reverse();
+  if(!ds.length)return `<section class="card"><h2>まだ記録がありません</h2><p class="mu">「記録」タブから、今日の分を入力してみましょう。</p><button class="btn pri" onclick="go('rec')">今日の記録をつける</button></section>`;
+  return `<p class="mu">記録 ${ds.length}日分</p>`+ds.map(d=>{const r=data.records[d];
+    const v=x=>num(x)?x:'−';
+    return `<section class="card"><div class="row"><b>${d.replace(/-/g,'/')}</b>
+      <button class="btn" onclick="editRec('${d}')">編集</button><button class="btn del" onclick="delRec('${d}')">削除</button></div>
+      <p class="mu">つらさ ${v(r.distress)}／不安 ${v(r.anxiety)}／気分 ${v(r.mood)}／胃 ${v(r.stomach)}／睡眠 ${num(r.sleep)?r.sleep+'h':'−'}／薬 ${r.med||'−'}</p>
+      ${r.note?`<p style="margin:0;font-size:15px">「${esc(r.note)}」</p>`:''}</section>`}).join('');
+}
+function editRec(d){cur=d;loadDraft();crisis=false;go('rec')}
+function delRec(d){if(!confirm(d.replace(/-/g,'/')+'の記録を削除しますか？'))return;delete data.records[d];delete data.share[d];persist();render()}
+
+/* ---------- レポート ---------- */
+function period(){
+  const t=today();let from=addDays(t,-13);
+  if(data.lastVisit&&data.lastVisit<t&&diff(data.lastVisit,t)<=180)from=addDays(data.lastVisit,1);
+  return {from,to:t,n:diff(from,t)+1};
+}
+function stat(list,k){const v=list.map(r=>r[k]).filter(num);if(!v.length)return{avg:null,n:0,min:null,max:null};
+  const s=v.reduce((a,b)=>a+b,0);return{avg:+(s/v.length).toFixed(1),n:v.length,min:Math.min(...v),max:Math.max(...v)}}
+function reportText(){
+  const p=period();
+  const recs=Object.keys(data.records).filter(d=>d>=p.from&&d<=p.to).sort().map(d=>Object.assign({d},data.records[d]));
+  const line=(l,s,u,mx)=>s.n?`・${l}：平均 ${s.avg}${u}${mx?'/4':''}（${s.n}日分、範囲 ${s.min}〜${s.max}）`:`・${l}：記録なし`;
+  const mid=addDays(p.from,Math.floor(p.n/2));
+  const h1=recs.filter(r=>r.d<mid),h2=recs.filter(r=>r.d>=mid);
+  const half=k=>{const a=stat(h1,k),b=stat(h2,k);
+    return `${a.n?a.avg+'（'+a.n+'日分）':'記録なし'} → ${b.n?b.avg+'（'+b.n+'日分）':'記録なし'}`};
+  const loopA=recs.filter(r=>typeof r.loop==='boolean'),loopY=loopA.filter(r=>r.loop);
+  const medA=recs.filter(r=>r.med),taken=medA.filter(r=>r.med==='飲めた'),missed=medA.filter(r=>r.med==='飲み忘れた');
+  const none=[];
+  FIELDS.forEach(([k,l])=>{if(!stat(recs,k).n)none.push(l)});
+  if(!stat(recs,'sleep').n)none.push('睡眠時間');if(!loopA.length)none.push('思考ループ');if(!medA.length)none.push('服薬');
+  const notes=recs.filter(r=>r.note&&data.share[r.d]);
+  return [
+`【診察前メモ】${fmt(p.from)}〜${fmt(p.to)}（${p.n}日間・記録${recs.length}日／未記録${p.n-recs.length}日）`,
+`※本人の記録を未入力除外で集計。診断や薬の効果の判断ではありません。`,
+``,`■今回一番伝えたいこと`,data.chief.trim()||'（未記入）',
+``,`■症状の平均（0〜4）`,...FIELDS.map(([k,l])=>line(l,stat(recs,k),'',true)),
+`・前半→後半の不安（${fmt(p.from)}〜${fmt(addDays(mid,-1))} → ${fmt(mid)}〜${fmt(p.to)}）：${half('anxiety')}`,
+`・思考ループ：${loopA.length?`「あり」${loopY.length}日（回答${loopA.length}日分）`:'記録なし'}`,
+``,`■睡眠`,line('睡眠時間',stat(recs,'sleep'),'時間'),`・前半→後半：${half('sleep')}`,
+``,`■服薬`,medA.length?`・飲めた${taken.length}日／飲み忘れ${missed.length}日（回答${medA.length}日分）`:'・記録なし',
+...(missed.length?[`・飲み忘れ日：${missed.map(r=>fmt(r.d)).join('、')}`]:[]),
+``,`■本人メモ（共有を選んだもの）`,...(notes.length?notes.map(r=>`・${fmt(r.d)}「${r.note}」`):['・なし']),
+``,`■医師に質問したいこと`,data.questions.trim()||'（未記入）',
+``,`■期間中に記録がなかった項目`,none.length?none.join('、'):'なし'
+  ].join('\n');
+}
+function vRep(){
+  const p=period();
+  const recs=Object.keys(data.records).filter(d=>d>=p.from&&d<=p.to).sort();
+  const withNote=recs.filter(d=>data.records[d].note);
+  return `
+  <section class="card">
+    <p class="mu">対象期間：${fmt(p.from)}〜${fmt(p.to)}${data.lastVisit?'（前回受診日の翌日から）':'（直近14日。設定で前回受診日を入れると変わります）'}</p>
+    <label for="ch"><b>今回一番伝えたいこと</b></label>
+    <textarea id="ch" oninput="data.chief=this.value;persist();upd()">${esc(data.chief)}</textarea>
+    <label for="qs"><b>医師に質問したいこと</b></label>
+    <textarea id="qs" oninput="data.questions=this.value;persist();upd()">${esc(data.questions)}</textarea>
+  </section>
+  ${withNote.length?`<section class="card"><b>医師に見せるメモを選ぶ</b>${withNote.map(d=>`
+    <label class="sub" style="flex-direction:row;gap:10px;cursor:pointer"><input type="checkbox" style="width:22px;min-height:22px" ${data.share[d]?'checked':''} onchange="data.share['${d}']=this.checked;persist();upd()"><span><b>${fmt(d)}</b><br>${esc(data.records[d].note)}</span></label>`).join('')}</section>`:''}
+  <section class="card"><div class="row"><h2>診察で見せる内容</h2><button class="btn pri" onclick="copyRep()">コピー</button></div>
+    <pre id="rt">${esc(reportText())}</pre></section>`;
+}
+function upd(){const e=document.getElementById('rt');if(e)e.textContent=reportText()}
+function copyRep(){
+  const t=reportText();
+  const done=()=>toast('コピーしました');
+  if(navigator.clipboard)navigator.clipboard.writeText(t).then(done,fb);else fb();
+  function fb(){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');done()}catch(e){toast('コピーできませんでした')}a.remove()}
+}
+
+/* ---------- 設定 ---------- */
+function vSet(){return `
+  <section class="card"><h2>前回の受診日</h2>
+    <p class="mu">入れると、レポートの期間が「前回受診日の翌日〜今日」になります。</p>
+    <input type="date" max="${today()}" value="${data.lastVisit||''}" aria-label="前回の受診日" onchange="data.lastVisit=this.value;persist();toast('保存しました')"></section>
+  <section class="card"><h2>バックアップ</h2>
+    <p class="mu">データはこのブラウザ内だけにあります。ブラウザの履歴削除や機種変更で消えるため、ときどき書き出してください。</p>
+    <button class="btn" onclick="exportData()">データを書き出す</button>
+    <label class="btn" style="display:flex;align-items:center;justify-content:center">データを読み込む<input type="file" accept="application/json" class="hidden" onchange="importData(this.files[0])"></label></section>
+  <section class="card"><h2>すべて削除</h2><button class="btn del" onclick="wipe()">全データを削除する</button></section>
+  <details class="card"><summary><b>つらいときの相談先</b></summary>${crisisBody()}</details>`}
+function exportData(){
+  const b=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`shinsatsu-memo-${today()}.json`;a.click();
+}
+function importData(f){
+  if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const s=JSON.parse(r.result);if(!s||typeof s.records!=='object')throw 0;
+    if(!confirm('今のデータを読み込んだデータで置き換えますか？'))return;
+    data=Object.assign({records:{},chief:'',questions:'',lastVisit:'',share:{}},s);persist();loadDraft();toast('読み込みました');render()}
+    catch(e){toast('読み込めないファイルです')}};
+  r.readAsText(f);
+}
+function wipe(){if(!confirm('すべての記録を削除します。元に戻せません。よろしいですか？'))return;
+  data={records:{},chief:'',questions:'',lastVisit:'',share:{}};persist();loadDraft();toast('削除しました');render()}
+
+render();
+</script>
+</body>
+</html>
