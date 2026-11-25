@@ -4,45 +4,88 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0F5C55">
-<title>診察メモ</title>
+<title>診察メモAI</title>
 <style>
-:root{--bg:#F4F7F6;--sf:#fff;--sub:#EEF2F1;--tx:#1A2421;--mu:#4A5D57;--bd:#CBD5D1;--pr:#0F5C55;--pl:#E6F3F1;--dg:#7F1D1D;--dgb:#FFF5F5;--dgd:#E5989B}
-@media(prefers-color-scheme:dark){:root{--bg:#121816;--sf:#1B2421;--sub:#232E2A;--tx:#E8EEEC;--mu:#A5B5AF;--bd:#3A4944;--pr:#4DB6AC;--pl:#1F3A36;--dg:#FFB4B4;--dgb:#3A1F1F;--dgd:#8A4A4A}}
+:root{
+  --bg:#111615;--sf:#1B2220;--sub:#242E2B;--tx:#FFFFFF;--mu:#E6ECEA;--bd:#3E4F49;
+  --pr:#2DD4BF;--pr-tx:#0B221F;--pl:#1B3B36;--dg:#FFB4B4;--dgb:#3A1F1F;--dgd:#8A4A4A;
+  --chk-bg:#FFFFFF;--chk-bd:#CBD5D1;--chk-on:#38BDF8;--chk-tx:#FFFFFF;
+  --nav-tx:#E6ECEA;
+}
+:root[data-theme="light"]{
+  --bg:#F4F7F6;--sf:#FFFFFF;--sub:#EEF2F1;--tx:#111827;--mu:#1F2937;--bd:#CBD5D1;
+  --pr:#0F5C55;--pr-tx:#FFFFFF;--pl:#E6F3F1;--dg:#7F1D1D;--dgb:#FFF5F5;--dgd:#E5989B;
+  --chk-bg:#FFFFFF;--chk-bd:#94A3B8;--chk-on:#0EA5E9;--chk-tx:#FFFFFF;
+  --nav-tx:#374151;
+}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.6 -apple-system,"Hiragino Sans","Yu Gothic UI","Noto Sans JP",sans-serif}
 #app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
 header{padding:12px 16px;border-bottom:1px solid var(--bd);background:var(--sf)}
-header h1{margin:0;font-size:18px}
-header p{margin:0;font-size:13px;color:var(--mu)}
-main{flex:1;padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
-.card{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
-.sub{background:var(--sub);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px}
-h2{margin:0;font-size:16px}
-.mu{margin:0;font-size:14px;color:var(--mu)}
+.hd-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+header h1{margin:0;font-size:20px;letter-spacing:.02em}
+.tab-badge{font-size:14px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--pl);color:var(--pr)}
+header p{margin:4px 0 0;font-size:15px;color:var(--mu)}
+main{flex:1;padding:14px 14px 100px;display:flex;flex-direction:column;gap:12px}
+main.has-action{padding-bottom:164px}
+.lead-line{margin:0;font-size:15px;font-weight:600;color:var(--tx);background:var(--pl);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;line-height:1.45}
+.flow-line{margin:0;font-size:14px;font-weight:700;color:var(--tx);background:var(--pl);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.sub{background:var(--sub);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+h2{margin:0;font-size:18px}
+.mu{margin:0;font-size:16px;color:var(--mu);line-height:1.55}
+.scale-guide{margin:0;font-size:11px;color:var(--mu);line-height:1.5;text-align:center}
 .btn{min-height:44px;padding:8px 12px;border-radius:12px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);font:600 15px inherit;font-family:inherit;cursor:pointer}
-.btn.on,.btn.pri{background:var(--pr);border-color:var(--pr);color:#fff}
+.btn.on,.btn.pri{background:var(--pr);border-color:var(--pr);color:var(--pr-tx)}
 .btn.del{color:var(--dg);border-color:var(--dgd)}
+.btn.del-sm{min-height:34px;padding:4px 10px;font-size:13px;border-radius:9px;flex:0 0 auto}
+.btn.edit-btn{min-height:40px;padding:6px 14px;font-size:15px;flex:0 0 auto}
 .g5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .row{display:flex;gap:8px;align-items:center}
 .row>*{flex:1}
-input,select,textarea{width:100%;min-height:44px;padding:10px;font:16px inherit;font-family:inherit;color:var(--tx);background:var(--sf);border:1px solid var(--bd);border-radius:12px}
+.hist-hd{display:flex;align-items:center;gap:8px}
+.hist-date{flex:1;font-size:17px}
+input,select,textarea{width:100%;max-width:100%;min-width:0;min-height:44px;padding:10px;font:16px inherit;font-family:inherit;color:var(--tx);background:var(--sf);border:1px solid var(--bd);border-radius:12px;display:block}
+input::placeholder,textarea::placeholder{color:var(--mu);opacity:.65}
 textarea{min-height:90px}
-nav{position:fixed;bottom:0;left:0;right:0;background:var(--sf);border-top:1px solid var(--bd);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom)}
+.date-wrap{position:relative;width:100%;max-width:100%}
+.date-wrap input[type="date"]{width:100%;max-width:100%;min-width:0;padding-right:40px;appearance:none;-webkit-appearance:none}
+.date-wrap input[type="date"]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;right:0;top:0;width:44px;height:100%;cursor:pointer;z-index:2}
+.date-ph{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--mu);opacity:.6;pointer-events:none;font-size:16px}
+.date-ico{position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--mu);display:flex;align-items:center}
+.chk-item{flex-direction:row;align-items:flex-start;gap:12px;cursor:pointer}
+.chk-box{appearance:none;-webkit-appearance:none;width:26px;min-width:26px;height:26px;min-height:26px;margin:2px 0 0;padding:0;border-radius:7px;border:2px solid var(--chk-bd);background:var(--chk-bg);position:relative;cursor:pointer;flex:0 0 26px}
+.chk-box:checked{background:var(--chk-on);border-color:var(--chk-on)}
+.chk-box:checked::after{content:"✓";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--chk-tx);font-size:17px;font-weight:800;line-height:1}
+.rep-big{background:var(--sub);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.rep-big-label{font-size:14px;font-weight:700;color:var(--pr)}
+.rep-big-val{font-size:18px;font-weight:700;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.avg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.avg-box{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:10px 6px;text-align:center}
+.avg-name{font-size:13px;color:var(--mu);margin-bottom:4px;line-height:1.3}
+.avg-num{font-size:22px;font-weight:800;color:var(--tx)}
+.sticky-action{position:fixed;left:0;right:0;bottom:calc(56px + env(safe-area-inset-bottom));z-index:8;display:flex;justify-content:center;padding:8px 14px;background:var(--bg);border-top:1px solid var(--bd)}
+.sticky-action button{width:100%;max-width:492px;min-height:52px;font-size:18px;font-weight:800;border-radius:14px}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:8;background:var(--sf);border-top:1px solid var(--bd);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom)}
 nav div{display:grid;grid-template-columns:repeat(4,1fr);width:100%;max-width:520px;padding:4px}
-nav button{min-height:48px;border:0;background:none;color:var(--mu);font:600 15px inherit;font-family:inherit;border-radius:10px}
-nav button.on{background:var(--pl);color:var(--pr)}
+nav button{min-height:48px;border:0;background:none;color:var(--nav-tx);font:600 15px inherit;font-family:inherit;border-radius:10px;cursor:pointer}
+nav button.on{background:var(--pl);color:var(--pr);font-weight:800}
 .danger{background:var(--dgb);border:2px solid var(--dgd);border-radius:14px;padding:14px;color:var(--tx)}
 .danger a{color:var(--dg);font-weight:700}
 pre{white-space:pre-wrap;word-break:break-word;font:15px/1.7 inherit;font-family:inherit;margin:0}
-#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1E293B;color:#fff;padding:10px 16px;border-radius:99px;font-size:15px;z-index:9}
+#toast{position:fixed;bottom:130px;left:50%;transform:translateX(-50%);background:#0F172A;color:#FFFFFF;border:1px solid #475569;padding:10px 18px;border-radius:99px;font-size:16px;font-weight:700;z-index:20;white-space:nowrap}
 .hidden{display:none}
 </style>
 </head>
 <body>
 <div id="app">
-<header><h1 id="ht">診察メモ</h1><p>診断・治療の助言ではなく、本人の記録整理用です。データはこの端末内にのみ保存されます。</p></header>
+<header>
+  <div class="hd-top"><h1>診察メモAI</h1><span id="ht" class="tab-badge">記録</span></div>
+  <p>診断の代わりではありません。記録だけのアプリです。</p>
+</header>
 <main id="main"></main>
 </div>
+<div id="sticky-wrap" class="sticky-action hidden"></div>
 <div id="toast" class="hidden"></div>
 <nav><div id="nav"></div></nav>
 <script>
@@ -56,13 +99,20 @@ const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 const num=v=>typeof v==='number'&&isFinite(v);
 const today=()=>ymd(new Date());
 
-let data={records:{},chief:'',questions:'',lastVisit:'',share:{}};
+let data={records:{},chief:'',questions:'',lastVisit:'',share:{},theme:'dark'};
 try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)data=Object.assign(data,s)}catch(e){}
+function applyTheme(){
+  const t=data.theme==='light'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',t);
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta)meta.setAttribute('content',t==='light'?'#0F5C55':'#111615');
+}
+applyTheme();
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){toast('保存できませんでした（プライベートモードの可能性）')}}
 
 const FIELDS=[['distress','全体的なつらさ'],['anxiety','不安の強さ'],['mood','気分の落ち込み'],['stomach','胃の不快感']];
 const blank=()=>({distress:null,anxiety:null,mood:null,stomach:null,loop:null,sleep:null,med:null,note:''});
-let tab='rec',cur=today(),draft=blank(),crisis=false;
+let tab='rec',cur=today(),draft=blank(),crisis=false,repDetail=false;
 loadDraft();
 
 function loadDraft(){draft=Object.assign(blank(),data.records[cur]||{})}
@@ -74,22 +124,44 @@ function render(){
   document.getElementById('ht').textContent=titles[tab];
   document.getElementById('nav').innerHTML=[['rec','記録'],['hist','履歴'],['rep','レポート'],['set','設定']]
     .map(([k,l])=>`<button class="${tab===k?'on':''}" onclick="go('${k}')">${l}</button>`).join('');
-  document.getElementById('main').innerHTML={rec:vRec,hist:vHist,rep:vRep,set:vSet}[tab]();
+  const mainEl=document.getElementById('main');
+  const stickyEl=document.getElementById('sticky-wrap');
+  mainEl.innerHTML={rec:vRec,hist:vHist,rep:vRep,set:vSet}[tab]();
+  if(tab==='rec'){
+    mainEl.classList.add('has-action');
+    stickyEl.classList.remove('hidden');
+    stickyEl.innerHTML=`<button class="btn pri" onclick="saveRec()">保存する</button>`;
+  }else if(tab==='rep'){
+    mainEl.classList.add('has-action');
+    stickyEl.classList.remove('hidden');
+    stickyEl.innerHTML=`<button class="btn pri" onclick="copyRep()">今すぐコピー</button>`;
+  }else{
+    mainEl.classList.remove('has-action');
+    stickyEl.classList.add('hidden');
+    stickyEl.innerHTML='';
+  }
 }
 
 /* ---------- 記録 ---------- */
 function vRec(){
   const exists=!!data.records[cur];
   return `
+  <p class="lead-line">今日の体調を記録して、診察で先生に見せるメモを作ります</p>
   ${crisis?crisisBox():''}
   <section class="card">
     <label class="mu" for="d">記録する日</label>
-    <input id="d" type="date" max="${today()}" value="${cur}" onchange="changeDate(this.value)">
+    <div class="date-wrap">
+      <input id="d" type="date" max="${today()}" value="${cur}" onchange="changeDate(this.value)">
+      <span class="date-ico" aria-hidden="true">${calSvg()}</span>
+    </div>
     <p class="mu">${exists?'この日は記録済みです（上書き保存されます）':'この日はまだ記録がありません'}。書ける項目だけで大丈夫です。未選択は「未入力」として扱われ、0（なし）とは区別されます。</p>
     ${FIELDS.map(([k,l])=>`
-      <div class="sub"><div class="row"><b>${l}</b><span class="mu" style="text-align:right">${num(draft[k])?draft[k]+' / 4':'未入力'}</span></div>
-      <div class="g5">${[0,1,2,3,4].map(n=>`<button class="btn ${draft[k]===n?'on':''}" onclick="setScale('${k}',${n})">${n}</button>`).join('')}</div></div>`).join('')}
-    <p class="mu">0＝なし　4＝とてもつらい。もう一度押すと未入力に戻ります。</p>
+      <div class="sub">
+        <div class="row"><b>${l}</b><span class="mu" style="text-align:right">${num(draft[k])?draft[k]+' / 4':'未入力'}</span></div>
+        <div class="g5">${[0,1,2,3,4].map(n=>`<button class="btn ${draft[k]===n?'on':''}" onclick="setScale('${k}',${n})">${n}</button>`).join('')}</div>
+        <p class="scale-guide">0 なし ／ 1 少し ／ 2 まあまあ<br>3 つらい ／ 4 とてもつらい</p>
+      </div>`).join('')}
+    <p class="mu">もう一度同じ数字を押すと「未入力」に戻ります。</p>
     <label class="mu" for="lp">思考ループ（同じ考えが頭を回る）</label>
     <select id="lp" onchange="draft.loop=this.value===''?null:this.value==='1'">
       <option value="" ${draft.loop===null?'selected':''}>未入力</option>
@@ -102,10 +174,10 @@ function vRec(){
       ${['','飲めた','飲み忘れた','対象外・なし'].map(o=>`<option value="${o}" ${(draft.med||'')===o?'selected':''}>${o||'未入力'}</option>`).join('')}</select>
     <label class="mu" for="nt">自由メモ（原文のまま保存）</label>
     <textarea id="nt" placeholder="気になったこと、先生に伝えたいこと" oninput="draft.note=this.value">${esc(draft.note)}</textarea>
-    <button class="btn pri" onclick="saveRec()">保存する</button>
   </section>
   <details class="card"><summary><b>つらいときの相談先</b></summary>${crisisBody()}</details>`;
 }
+function calSvg(){return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`}
 function crisisBody(){return `<p class="mu">命の危険を感じるときは <a href="tel:119">119</a>（救急）や <a href="tel:110">110</a>。通院先にも連絡してください。</p>
 <p class="mu">#いのちSOS <a href="tel:0120061338">0120-061-338</a><br>よりそいホットライン <a href="tel:0120279338">0120-279-338</a><br>受付時間などは厚生労働省「まもろうよ こころ」で最新情報をご確認ください。</p>`}
 function crisisBox(){return `<section class="danger" role="alert"><b>つらい気持ちが書かれていました。</b><p style="margin:6px 0">ひとりで抱えず、誰かに話してください。このアプリは緊急対応を行えません。</p>${crisisBody()}</section>`}
@@ -117,7 +189,7 @@ function saveRec(){
   data.records[cur]=Object.assign({},draft,{note:draft.note.trim()});
   persist();
   crisis=/死にたい|消えたい|消えてしまいたい|いなくなりたい|自殺/.test(draft.note);
-  toast(fmt(cur)+'の記録を保存しました');
+  toast('保存しました');
   if(crisis){render();window.scrollTo(0,0)}else{cur=today();loadDraft();go('hist')}
 }
 
@@ -127,13 +199,13 @@ function vHist(){
   if(!ds.length)return `<section class="card"><h2>まだ記録がありません</h2><p class="mu">「記録」タブから、今日の分を入力してみましょう。</p><button class="btn pri" onclick="go('rec')">今日の記録をつける</button></section>`;
   return `<p class="mu">記録 ${ds.length}日分</p>`+ds.map(d=>{const r=data.records[d];
     const v=x=>num(x)?x:'−';
-    return `<section class="card"><div class="row"><b>${d.replace(/-/g,'/')}</b>
-      <button class="btn" onclick="editRec('${d}')">編集</button><button class="btn del" onclick="delRec('${d}')">削除</button></div>
-      <p class="mu">つらさ ${v(r.distress)}／不安 ${v(r.anxiety)}／気分 ${v(r.mood)}／胃 ${v(r.stomach)}／睡眠 ${num(r.sleep)?r.sleep+'h':'−'}／薬 ${r.med||'−'}</p>
-      ${r.note?`<p style="margin:0;font-size:15px">「${esc(r.note)}」</p>`:''}</section>`}).join('');
+    return `<section class="card"><div class="hist-hd"><b class="hist-date">${d.replace(/-/g,'/')}</b>
+      <button class="btn edit-btn" onclick="editRec('${d}')">編集</button><button class="btn del del-sm" onclick="delRec('${d}')">削除</button></div>
+      <p class="mu">全体的なつらさ ${v(r.distress)}／不安 ${v(r.anxiety)}／気分 ${v(r.mood)}／胃 ${v(r.stomach)}／睡眠 ${num(r.sleep)?r.sleep+'h':'−'}／薬 ${r.med||'−'}</p>
+      ${r.note?`<p style="margin:0;font-size:16px">「${esc(r.note)}」</p>`:''}</section>`}).join('');
 }
 function editRec(d){cur=d;loadDraft();crisis=false;go('rec')}
-function delRec(d){if(!confirm(d.replace(/-/g,'/')+'の記録を削除しますか？'))return;delete data.records[d];delete data.share[d];persist();render()}
+function delRec(d){if(!confirm('本当に消しますか？'))return;delete data.records[d];delete data.share[d];persist();render()}
 
 /* ---------- レポート ---------- */
 function period(){
@@ -172,24 +244,64 @@ function reportText(){
 ``,`■期間中に記録がなかった項目`,none.length?none.join('、'):'なし'
   ].join('\n');
 }
+function repSummaryHtml(){
+  const p=period();
+  const recs=Object.keys(data.records).filter(d=>d>=p.from&&d<=p.to).sort().map(d=>Object.assign({d},data.records[d]));
+  const sD=stat(recs,'distress'),sA=stat(recs,'anxiety'),sM=stat(recs,'mood');
+  const av=s=>s.n?`${s.avg}<span style="font-size:13px;font-weight:600"> / 4</span>`:'−';
+  return `
+  <div class="rep-big">
+    <span class="rep-big-label">一番伝えたいこと</span>
+    <div class="rep-big-val">${esc(data.chief.trim()||'（未記入）')}</div>
+  </div>
+  <div class="rep-big">
+    <span class="rep-big-label">医師に質問したいこと</span>
+    <div class="rep-big-val">${esc(data.questions.trim()||'（未記入）')}</div>
+  </div>
+  <div class="rep-big">
+    <span class="rep-big-label">全体的なつらさ・不安・気分の平均（${fmt(p.from)}〜${fmt(p.to)}）</span>
+    <div class="avg-grid">
+      <div class="avg-box"><div class="avg-name">全体的な<br>つらさ</div><div class="avg-num">${av(sD)}</div></div>
+      <div class="avg-box"><div class="avg-name">不安の<br>強さ</div><div class="avg-num">${av(sA)}</div></div>
+      <div class="avg-box"><div class="avg-name">気分の<br>落ち込み</div><div class="avg-num">${av(sM)}</div></div>
+    </div>
+  </div>`;
+}
 function vRep(){
   const p=period();
   const recs=Object.keys(data.records).filter(d=>d>=p.from&&d<=p.to).sort();
   const withNote=recs.filter(d=>data.records[d].note);
   return `
+  <p class="flow-line">① メモを選ぶ → ② 内容を見る → ③ コピーする</p>
   <section class="card">
     <p class="mu">対象期間：${fmt(p.from)}〜${fmt(p.to)}${data.lastVisit?'（前回受診日の翌日から）':'（直近14日。設定で前回受診日を入れると変わります）'}</p>
     <label for="ch"><b>今回一番伝えたいこと</b></label>
-    <textarea id="ch" oninput="data.chief=this.value;persist();upd()">${esc(data.chief)}</textarea>
+    <textarea id="ch" placeholder="ここを押して書いてください" oninput="data.chief=this.value;persist();upd()">${esc(data.chief)}</textarea>
     <label for="qs"><b>医師に質問したいこと</b></label>
-    <textarea id="qs" oninput="data.questions=this.value;persist();upd()">${esc(data.questions)}</textarea>
+    <textarea id="qs" placeholder="聞きたいことがあれば書いてください" oninput="data.questions=this.value;persist();upd()">${esc(data.questions)}</textarea>
   </section>
   ${withNote.length?`<section class="card"><b>医師に見せるメモを選ぶ</b>${withNote.map(d=>`
-    <label class="sub" style="flex-direction:row;gap:10px;cursor:pointer"><input type="checkbox" style="width:22px;min-height:22px" ${data.share[d]?'checked':''} onchange="data.share['${d}']=this.checked;persist();upd()"><span><b>${fmt(d)}</b><br>${esc(data.records[d].note)}</span></label>`).join('')}</section>`:''}
-  <section class="card"><div class="row"><h2>診察で見せる内容</h2><button class="btn pri" onclick="copyRep()">コピー</button></div>
-    <pre id="rt">${esc(reportText())}</pre></section>`;
+    <label class="sub chk-item"><input type="checkbox" class="chk-box" ${data.share[d]?'checked':''} onchange="data.share['${d}']=this.checked;persist();upd()"><span><b>${fmt(d)}</b><br>${esc(data.records[d].note)}</span></label>`).join('')}</section>`:''}
+  <section class="card">
+    <h2>診察で見せる内容</h2>
+    <div id="rep-sum">${repSummaryHtml()}</div>
+    <button class="btn" id="rep-toggle" onclick="toggleRepDetail()">${repDetail?'詳細を閉じる':'詳しく見る'}</button>
+    <pre id="rt" class="${repDetail?'':'hidden'}">${esc(reportText())}</pre>
+  </section>`;
 }
-function upd(){const e=document.getElementById('rt');if(e)e.textContent=reportText()}
+function toggleRepDetail(){
+  repDetail=!repDetail;
+  const rt=document.getElementById('rt');
+  const btn=document.getElementById('rep-toggle');
+  if(rt)rt.classList.toggle('hidden',!repDetail);
+  if(btn)btn.textContent=repDetail?'詳細を閉じる':'詳しく見る';
+}
+function upd(){
+  const sum=document.getElementById('rep-sum');
+  if(sum)sum.innerHTML=repSummaryHtml();
+  const e=document.getElementById('rt');
+  if(e)e.textContent=reportText();
+}
 function copyRep(){
   const t=reportText();
   const done=()=>toast('コピーしました');
@@ -199,15 +311,37 @@ function copyRep(){
 
 /* ---------- 設定 ---------- */
 function vSet(){return `
+  <section class="card"><h2>画面の明るさ</h2>
+    <p class="mu">見やすい表示を選べます。</p>
+    <div class="row">
+      <button class="btn ${data.theme!=='light'?'on':''}" onclick="setTheme('dark')">暗い画面（白文字）</button>
+      <button class="btn ${data.theme==='light'?'on':''}" onclick="setTheme('light')">明るい画面（白背景）</button>
+    </div>
+  </section>
   <section class="card"><h2>前回の受診日</h2>
     <p class="mu">入れると、レポートの期間が「前回受診日の翌日〜今日」になります。</p>
-    <input type="date" max="${today()}" value="${data.lastVisit||''}" aria-label="前回の受診日" onchange="data.lastVisit=this.value;persist();toast('保存しました')"></section>
+    <div class="date-wrap">
+      <input id="lv" type="date" max="${today()}" value="${data.lastVisit||''}" aria-label="前回の受診日" onchange="data.lastVisit=this.value;persist();toast('保存しました');render()">
+      ${data.lastVisit?'':`<span class="date-ph">例：2026/11/04</span>`}
+      <span class="date-ico" aria-hidden="true">${calSvg()}</span>
+    </div>
+  </section>
+  <section class="card"><h2>このアプリについて</h2>
+    <p class="mu">このアプリは診断・治療の助言を行うものではなく、本人の記録整理用です。記録されたデータはこの端末のブラウザ内にのみ保存され、外部には送信されません。</p>
+  </section>
   <section class="card"><h2>バックアップ</h2>
     <p class="mu">データはこのブラウザ内だけにあります。ブラウザの履歴削除や機種変更で消えるため、ときどき書き出してください。</p>
     <button class="btn" onclick="exportData()">データを書き出す</button>
     <label class="btn" style="display:flex;align-items:center;justify-content:center">データを読み込む<input type="file" accept="application/json" class="hidden" onchange="importData(this.files[0])"></label></section>
   <section class="card"><h2>すべて削除</h2><button class="btn del" onclick="wipe()">全データを削除する</button></section>
   <details class="card"><summary><b>つらいときの相談先</b></summary>${crisisBody()}</details>`}
+function setTheme(t){
+  data.theme=t;
+  applyTheme();
+  persist();
+  render();
+  toast(t==='light'?'明るい画面にしました':'暗い画面にしました');
+}
 function exportData(){
   const b=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`shinsatsu-memo-${today()}.json`;a.click();
@@ -216,12 +350,12 @@ function importData(f){
   if(!f)return;const r=new FileReader();
   r.onload=()=>{try{const s=JSON.parse(r.result);if(!s||typeof s.records!=='object')throw 0;
     if(!confirm('今のデータを読み込んだデータで置き換えますか？'))return;
-    data=Object.assign({records:{},chief:'',questions:'',lastVisit:'',share:{}},s);persist();loadDraft();toast('読み込みました');render()}
+    data=Object.assign({records:{},chief:'',questions:'',lastVisit:'',share:{},theme:'dark'},s);applyTheme();persist();loadDraft();toast('読み込みました');render()}
     catch(e){toast('読み込めないファイルです')}};
   r.readAsText(f);
 }
 function wipe(){if(!confirm('すべての記録を削除します。元に戻せません。よろしいですか？'))return;
-  data={records:{},chief:'',questions:'',lastVisit:'',share:{}};persist();loadDraft();toast('削除しました');render()}
+  data={records:{},chief:'',questions:'',lastVisit:'',share:{},theme:data.theme||'dark'};persist();loadDraft();toast('削除しました');render()}
 
 render();
 </script>
