@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0F5C55">
+<meta name="theme-color" content="#111615">
 <title>診察メモAI</title>
 <style>
 :root{
   --bg:#111615;--sf:#1B2220;--sub:#242E2B;--tx:#FFFFFF;--mu:#E6ECEA;--bd:#3E4F49;
   --pr:#2DD4BF;--pr-tx:#0B221F;--pl:#1B3B36;--dg:#FFB4B4;--dgb:#3A1F1F;--dgd:#8A4A4A;
   --chk-bg:#FFFFFF;--chk-bd:#CBD5D1;--chk-on:#38BDF8;--chk-tx:#FFFFFF;
-  --nav-tx:#E6ECEA;
+  --nav-tx:#E6ECEA;--warn-bg:#2E2614;--warn-bd:#B48A2E;--warn-tx:#FDE68A;
 }
 :root[data-theme="light"]{
   --bg:#F4F7F6;--sf:#FFFFFF;--sub:#EEF2F1;--tx:#111827;--mu:#1F2937;--bd:#CBD5D1;
   --pr:#0F5C55;--pr-tx:#FFFFFF;--pl:#E6F3F1;--dg:#7F1D1D;--dgb:#FFF5F5;--dgd:#E5989B;
   --chk-bg:#FFFFFF;--chk-bd:#94A3B8;--chk-on:#0EA5E9;--chk-tx:#FFFFFF;
-  --nav-tx:#374151;
+  --nav-tx:#374151;--warn-bg:#FEF9C3;--warn-bd:#D97706;--warn-tx:#92400E;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.6 -apple-system,"Hiragino Sans","Yu Gothic UI","Noto Sans JP",sans-serif}
@@ -33,9 +33,9 @@ main.has-action{padding-bottom:164px}
 .card{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
 .sub{background:var(--sub);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
 h2{margin:0;font-size:18px}
-.mu{margin:0;font-size:16px;color:var(--mu);line-height:1.55}
+.mu{margin:0;font-size:15px;color:var(--mu);line-height:1.55}
 .scale-guide{margin:0;font-size:11px;color:var(--mu);line-height:1.5;text-align:center}
-.btn{min-height:44px;padding:8px 12px;border-radius:12px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);font:600 15px inherit;font-family:inherit;cursor:pointer}
+.btn{min-height:44px;padding:8px 12px;border-radius:12px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);font:600 15px inherit;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
 .btn.on,.btn.pri{background:var(--pr);border-color:var(--pr);color:var(--pr-tx)}
 .btn.del{color:var(--dg);border-color:var(--dgd)}
 .btn.del-sm{min-height:34px;padding:4px 10px;font-size:13px;border-radius:9px;flex:0 0 auto}
@@ -53,8 +53,8 @@ textarea{min-height:90px}
 .date-wrap input[type="date"]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;right:0;top:0;width:44px;height:100%;cursor:pointer;z-index:2}
 .date-ph{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--mu);opacity:.6;pointer-events:none;font-size:16px}
 .date-ico{position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--mu);display:flex;align-items:center}
-.chk-item{flex-direction:row;align-items:flex-start;gap:12px;cursor:pointer}
-.chk-box{appearance:none;-webkit-appearance:none;width:26px;min-width:26px;height:26px;min-height:26px;margin:2px 0 0;padding:0;border-radius:7px;border:2px solid var(--chk-bd);background:var(--chk-bg);position:relative;cursor:pointer;flex:0 0 26px}
+.chk-item{flex-direction:row;align-items:center;gap:12px;cursor:pointer}
+.chk-box{appearance:none;-webkit-appearance:none;width:26px;min-width:26px;height:26px;min-height:26px;margin:0;padding:0;border-radius:7px;border:2px solid var(--chk-bd);background:var(--chk-bg);position:relative;cursor:pointer;flex:0 0 26px}
 .chk-box:checked{background:var(--chk-on);border-color:var(--chk-on)}
 .chk-box:checked::after{content:"✓";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--chk-tx);font-size:17px;font-weight:800;line-height:1}
 .rep-big{background:var(--sub);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px}
@@ -70,11 +70,54 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:8;background:var(--sf);border
 nav div{display:grid;grid-template-columns:repeat(4,1fr);width:100%;max-width:520px;padding:4px}
 nav button{min-height:48px;border:0;background:none;color:var(--nav-tx);font:600 15px inherit;font-family:inherit;border-radius:10px;cursor:pointer}
 nav button.on{background:var(--pl);color:var(--pr);font-weight:800}
-.danger{background:var(--dgb);border:2px solid var(--dgd);border-radius:14px;padding:14px;color:var(--tx)}
-.danger a{color:var(--dg);font-weight:700}
+.danger{background:var(--dgb);border:2px solid var(--dgd);border-radius:14px;padding:14px;color:var(--tx);display:flex;flex-direction:column;gap:10px}
 pre{white-space:pre-wrap;word-break:break-word;font:15px/1.7 inherit;font-family:inherit;margin:0}
-#toast{position:fixed;bottom:130px;left:50%;transform:translateX(-50%);background:#0F172A;color:#FFFFFF;border:1px solid #475569;padding:10px 18px;border-radius:99px;font-size:16px;font-weight:700;z-index:20;white-space:nowrap}
-.hidden{display:none}
+#toast{position:fixed;bottom:130px;left:50%;transform:translateX(-50%);background:#0F172A;color:#FFFFFF;border:1px solid #475569;padding:10px 18px;border-radius:99px;font-size:16px;font-weight:700;z-index:30;white-space:nowrap}
+.hidden{display:none !important}
+
+/* 連絡先（見やすいカード＋大きな電話番号ボタン） */
+.contact-list{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.contact-item{background:var(--sub);border:1px solid var(--bd);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.contact-item.urgent{background:var(--dgb);border-color:var(--dgd)}
+.contact-hd{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.contact-name{font-size:16px;font-weight:800;color:var(--tx)}
+.contact-sub{font-size:13px;color:var(--mu)}
+.tel-btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:10px 14px;border-radius:10px;background:#22D3EE;color:#042F2E;font-size:21px;font-weight:800;letter-spacing:.05em;text-decoration:none;font-variant-numeric:tabular-nums;box-shadow:0 0 12px rgba(34,211,238,.35)}
+.contact-item.urgent .tel-btn{background:#FF4D4F;color:#FFFFFF;box-shadow:0 0 12px rgba(255,77,79,.35)}
+:root[data-theme="light"] .tel-btn{background:var(--pr);color:var(--pr-tx);box-shadow:none}
+:root[data-theme="light"] .contact-item.urgent .tel-btn{background:#DC2626;color:#FFFFFF;box-shadow:none}
+.preset-row{display:flex;flex-wrap:wrap;gap:6px}
+.btn.preset{min-height:34px;padding:4px 10px;font-size:13px;border-radius:99px}
+.rem-pill{display:inline-flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:8px 12px;border-radius:10px;background:var(--sub);border:1px solid var(--bd);font-size:13px;color:var(--mu);cursor:pointer}
+
+/* 薬のチェック表 */
+.med-add-row{display:flex;gap:8px;align-items:center}
+.med-add-row input{flex:1}
+.med-add-row button{flex:0 0 auto;white-space:nowrap}
+.med-chip-row{display:flex;flex-wrap:wrap;gap:6px}
+.med-chip{display:inline-flex;align-items:center;gap:6px;background:var(--sub);border:1px solid var(--bd);border-radius:99px;padding:4px 10px;font-size:14px;font-weight:600}
+.med-chip button{border:0;background:none;color:var(--dg);font-size:16px;font-weight:800;cursor:pointer;padding:0 2px;line-height:1}
+.med-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--bd);border-radius:12px}
+.med-table{width:100%;border-collapse:collapse;font-size:14px;min-width:340px}
+.med-table th,.med-table td{border-bottom:1px solid var(--bd);border-right:1px solid var(--bd);padding:8px 4px;text-align:center}
+.med-table th:last-child,.med-table td:last-child{border-right:0}
+.med-table tr:last-child td{border-bottom:0}
+.med-table th{background:var(--sub);font-weight:700;font-size:12px;color:var(--mu)}
+.med-table td.med-name-cell{text-align:left;padding:8px 10px;font-weight:700;white-space:nowrap;background:var(--sf)}
+.med-cell-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--bd);background:var(--sub);color:var(--mu);font-size:16px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.med-cell-btn.done{background:var(--chk-on);border-color:var(--chk-on);color:#FFFFFF}
+
+/* リマインドバナー・設定 */
+.rem-banner{background:var(--warn-bg);border:2px solid var(--warn-bd);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;color:var(--tx)}
+.rem-banner-title{font-size:16px;font-weight:800;color:var(--warn-tx);display:flex;align-items:center;gap:6px}
+.switch-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--sub);padding:10px 12px;border-radius:12px}
+.switch-row label{font-weight:700;font-size:15px;cursor:pointer;flex:1}
+.switch-input{width:26px !important;min-width:26px !important;height:26px !important;min-height:26px !important;flex:0 0 26px !important}
+
+/* アプリ内確認モーダル */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:40;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal-box{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:18px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:14px}
+.modal-box p{margin:0;font-size:16px;line-height:1.55}
 </style>
 </head>
 <body>
@@ -87,6 +130,15 @@ pre{white-space:pre-wrap;word-break:break-word;font:15px/1.7 inherit;font-family
 </div>
 <div id="sticky-wrap" class="sticky-action hidden"></div>
 <div id="toast" class="hidden"></div>
+<div id="modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <p id="modal-msg"></p>
+    <div class="row">
+      <button class="btn" id="modal-cancel" onclick="closeModal(false)">キャンセル</button>
+      <button class="btn pri" id="modal-ok" onclick="closeModal(true)">OK</button>
+    </div>
+  </div>
+</div>
 <nav><div id="nav"></div></nav>
 <script>
 const KEY='shinsatsu-memo-v2';
@@ -98,9 +150,29 @@ const fmt=s=>{const p=s.split('-');return `${+p[1]}/${+p[2]}`};
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const num=v=>typeof v==='number'&&isFinite(v);
 const today=()=>ymd(new Date());
+const nowHHMM=()=>{const d=new Date();return `${pad(d.getHours())}:${pad(d.getMinutes())}`};
 
-let data={records:{},chief:'',questions:'',lastVisit:'',share:{},theme:'dark'};
-try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)data=Object.assign(data,s)}catch(e){}
+const DEFAULT_DATA=()=>({
+  records:{},
+  chief:'',
+  questions:'',
+  lastVisit:'',
+  share:{},
+  theme:'dark',
+  medList:['朝の薬','夜の薬'],
+  reminder:{enabled:false,time:'21:00',medEnabled:false,medTime:'08:00',dismissedDate:''}
+});
+
+let data=DEFAULT_DATA();
+try{
+  const s=JSON.parse(localStorage.getItem(KEY)||'null');
+  if(s){
+    data=Object.assign(DEFAULT_DATA(),s);
+    if(!Array.isArray(data.medList))data.medList=['朝の薬','夜の薬'];
+    data.reminder=Object.assign({enabled:false,time:'21:00',medEnabled:false,medTime:'08:00',dismissedDate:''},s.reminder||{});
+  }
+}catch(e){}
+
 function applyTheme(){
   const t=data.theme==='light'?'light':'dark';
   document.documentElement.setAttribute('data-theme',t);
@@ -108,16 +180,72 @@ function applyTheme(){
   if(meta)meta.setAttribute('content',t==='light'?'#0F5C55':'#111615');
 }
 applyTheme();
-function persist(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){toast('保存できませんでした（プライベートモードの可能性）')}}
+
+function persist(){
+  try{localStorage.setItem(KEY,JSON.stringify(data))}
+  catch(e){toast('保存できませんでした（プライベートモードの可能性）')}
+}
 
 const FIELDS=[['distress','全体的なつらさ'],['anxiety','不安の強さ'],['mood','気分の落ち込み'],['stomach','胃の不快感']];
-const blank=()=>({distress:null,anxiety:null,mood:null,stomach:null,loop:null,sleep:null,med:null,note:''});
-let tab='rec',cur=today(),draft=blank(),crisis=false,repDetail=false;
+const blank=()=>({distress:null,anxiety:null,mood:null,stomach:null,loop:null,sleep:null,med:null,medChecks:{},note:''});
+let tab='rec',cur=today(),draft=blank(),crisis=false,repDetail=false,modalCb=null,lastNotifiedKey='';
 loadDraft();
 
-function loadDraft(){draft=Object.assign(blank(),data.records[cur]||{})}
-function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.remove('hidden');clearTimeout(window._t);window._t=setTimeout(()=>t.classList.add('hidden'),2500)}
+function loadDraft(){
+  const rec=data.records[cur]||{};
+  draft=Object.assign(blank(),rec);
+  draft.medChecks=Object.assign({},rec.medChecks||{});
+}
+function toast(m){
+  const t=document.getElementById('toast');
+  t.textContent=m;
+  t.classList.remove('hidden');
+  clearTimeout(window._t);
+  window._t=setTimeout(()=>t.classList.add('hidden'),2500);
+}
+function openModal(msg,okLabel,isDanger,cb){
+  modalCb=cb;
+  document.getElementById('modal-msg').textContent=msg;
+  const okBtn=document.getElementById('modal-ok');
+  okBtn.textContent=okLabel||'OK';
+  okBtn.className=isDanger?'btn del':'btn pri';
+  document.getElementById('modal').classList.remove('hidden');
+}
+function closeModal(res){
+  document.getElementById('modal').classList.add('hidden');
+  const cb=modalCb;
+  modalCb=null;
+  if(res&&cb)cb();
+}
 function go(t){tab=t;render();window.scrollTo(0,0)}
+
+function reminderBannerHtml(){
+  const t=today();
+  if(data.reminder.dismissedDate===t)return '';
+  const hhmm=nowHHMM();
+  const needRec=data.reminder.enabled&&data.reminder.time&&hhmm>=data.reminder.time&&!data.records[t];
+  const todayRec=data.records[t];
+  const hasAnyMedCheck=todayRec&&todayRec.medChecks&&Object.values(todayRec.medChecks).some(Boolean);
+  const needMed=data.reminder.medEnabled&&data.reminder.medTime&&hhmm>=data.reminder.medTime&&data.medList.length>0&&!hasAnyMedCheck;
+  if(!needRec&&!needMed)return '';
+  const msgs=[];
+  if(needRec)msgs.push(`体調の記録（${data.reminder.time}〜）がまだです`);
+  if(needMed)msgs.push(`お薬のチェック（${data.reminder.medTime}〜）がまだです`);
+  return `
+  <section class="rem-banner" role="status">
+    <div class="rem-banner-title">リマインドのお知らせ</div>
+    <p style="margin:0;font-size:15px">${msgs.join(' ／ ')}</p>
+    <div class="row">
+      ${tab!=='rec'?`<button class="btn pri" onclick="go('rec')">記録・お薬チェックへ</button>`:''}
+      <button class="btn" onclick="dismissReminder()">今日は閉じる</button>
+    </div>
+  </section>`;
+}
+function dismissReminder(){
+  data.reminder.dismissedDate=today();
+  persist();
+  render();
+}
 
 function render(){
   const titles={rec:'記録する',hist:'履歴',rep:'診察前レポート',set:'設定'};
@@ -126,7 +254,8 @@ function render(){
     .map(([k,l])=>`<button class="${tab===k?'on':''}" onclick="go('${k}')">${l}</button>`).join('');
   const mainEl=document.getElementById('main');
   const stickyEl=document.getElementById('sticky-wrap');
-  mainEl.innerHTML={rec:vRec,hist:vHist,rep:vRep,set:vSet}[tab]();
+  const bodyHtml={rec:vRec,hist:vHist,rep:vRep,set:vSet}[tab]();
+  mainEl.innerHTML=reminderBannerHtml()+bodyHtml;
   if(tab==='rec'){
     mainEl.classList.add('has-action');
     stickyEl.classList.remove('hidden');
@@ -145,8 +274,17 @@ function render(){
 /* ---------- 記録 ---------- */
 function vRec(){
   const exists=!!data.records[cur];
+  const medItems=data.medList.map((m,i)=>`
+    <label class="sub chk-item">
+      <input type="checkbox" class="chk-box" ${draft.medChecks[m]?'checked':''} onchange="toggleDraftMed(${i},this.checked)">
+      <span style="font-weight:700;font-size:16px">${esc(m)}</span>
+    </label>`).join('');
   return `
   <p class="lead-line">今日の体調を記録して、診察で先生に見せるメモを作ります</p>
+  <button class="rem-pill" onclick="go('set')">
+    <span>リマインド：${data.reminder.enabled||data.reminder.medEnabled?[data.reminder.enabled?'記録 '+data.reminder.time:'',data.reminder.medEnabled?'服薬 '+data.reminder.medTime:''].filter(Boolean).join(' ／ '):'未設定'}</span>
+    <span style="color:var(--pr);font-weight:700">設定へ ›</span>
+  </button>
   ${crisis?crisisBox():''}
   <section class="card">
     <label class="mu" for="d">記録する日</label>
@@ -169,24 +307,87 @@ function vRec(){
       <option value="0" ${draft.loop===false?'selected':''}>なし</option></select>
     <label class="mu" for="sl">睡眠時間（時間）</label>
     <input id="sl" type="number" inputmode="decimal" step="0.5" min="0" max="24" placeholder="例：6.5" value="${num(draft.sleep)?draft.sleep:''}" oninput="const v=parseFloat(this.value);draft.sleep=isNaN(v)?null:v">
-    <label class="mu" for="md">服薬</label>
+    <div class="sub">
+      <div class="row"><b>お薬のチェック表（飲めた薬にチェック）</b><span class="mu" style="text-align:right">${data.medList.filter(m=>draft.medChecks[m]).length} / ${data.medList.length}</span></div>
+      ${data.medList.length?medItems:`<p class="mu">登録されたお薬がありません。下の欄や設定から追加できます。</p>`}
+      <div class="med-add-row">
+        <input id="rec-med-new" type="text" placeholder="薬や時間帯を追加（例：昼の薬）">
+        <button class="btn" onclick="addMedFromRec()">追加</button>
+      </div>
+      <div class="preset-row">
+        ${['朝の薬','昼の薬','夜の薬','寝る前','頓服'].filter(p=>!data.medList.includes(p)).map(p=>`<button class="btn preset" onclick="addPresetMed('${p}')">＋ ${p}</button>`).join('')}
+      </div>
+    </div>
+    <label class="mu" for="md">服薬全体のまとめ</label>
     <select id="md" onchange="draft.med=this.value||null">
       ${['','飲めた','飲み忘れた','対象外・なし'].map(o=>`<option value="${o}" ${(draft.med||'')===o?'selected':''}>${o||'未入力'}</option>`).join('')}</select>
     <label class="mu" for="nt">自由メモ（原文のまま保存）</label>
     <textarea id="nt" placeholder="気になったこと、先生に伝えたいこと" oninput="draft.note=this.value">${esc(draft.note)}</textarea>
   </section>
-  <details class="card"><summary><b>つらいときの相談先</b></summary>${crisisBody()}</details>`;
+  <details class="card"><summary><b>つらいときの相談先（タップで開く）</b></summary>${crisisBody()}</details>`;
+}
+function toggleDraftMed(idx,checked){
+  const name=data.medList[idx];
+  if(!name)return;
+  draft.medChecks[name]=checked;
+  if(checked&&!draft.med)draft.med='飲めた';
+  render();
+}
+function addPresetMed(name){
+  if(data.medList.includes(name))return;
+  data.medList.push(name);
+  persist();
+  toast(name+' を追加しました');
+  render();
+}
+function testReminder(){
+  const msg='リマインドのテスト通知です（設定時刻になるとお知らせします）';
+  toast(msg);
+  if(typeof Notification!=='undefined'&&Notification.permission==='granted'){
+    try{new Notification('診察メモAI',{body:msg})}catch(e){}
+  }
+}
+function addMedFromRec(){
+  const inp=document.getElementById('rec-med-new');
+  const val=(inp?inp.value:'').trim();
+  if(!val){toast('薬の名前を入力してください');return}
+  if(data.medList.includes(val)){toast('すでに登録されています');return}
+  data.medList.push(val);
+  persist();
+  toast('薬を追加しました');
+  render();
 }
 function calSvg(){return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`}
-function crisisBody(){return `<p class="mu">命の危険を感じるときは <a href="tel:119">119</a>（救急）や <a href="tel:110">110</a>。通院先にも連絡してください。</p>
-<p class="mu">#いのちSOS <a href="tel:0120061338">0120-061-338</a><br>よりそいホットライン <a href="tel:0120279338">0120-279-338</a><br>受付時間などは厚生労働省「まもろうよ こころ」で最新情報をご確認ください。</p>`}
+function crisisBody(){
+  return `
+  <div class="contact-list">
+    <div class="contact-item urgent">
+      <div class="contact-hd"><span class="contact-name">救急・消防</span><span class="contact-sub">命の危険があるとき</span></div>
+      <a class="tel-btn" href="tel:119">119 に電話する</a>
+    </div>
+    <div class="contact-item urgent">
+      <div class="contact-hd"><span class="contact-name">警察</span><span class="contact-sub">緊急の保護が必要なとき</span></div>
+      <a class="tel-btn" href="tel:110">110 に電話する</a>
+    </div>
+    <div class="contact-item">
+      <div class="contact-hd"><span class="contact-name">#いのちSOS</span><span class="contact-sub">通話料無料</span></div>
+      <a class="tel-btn" href="tel:0120061338">0120-061-338</a>
+    </div>
+    <div class="contact-item">
+      <div class="contact-hd"><span class="contact-name">よりそいホットライン</span><span class="contact-sub">24時間・通話料無料</span></div>
+      <a class="tel-btn" href="tel:0120279338">0120-279-338</a>
+    </div>
+  </div>
+  <p class="mu">通院先にもご連絡ください。受付時間などは厚生労働省「まもろうよ こころ」で最新情報をご確認ください。</p>`;
+}
 function crisisBox(){return `<section class="danger" role="alert"><b>つらい気持ちが書かれていました。</b><p style="margin:6px 0">ひとりで抱えず、誰かに話してください。このアプリは緊急対応を行えません。</p>${crisisBody()}</section>`}
 function changeDate(v){if(!v)return;cur=v;loadDraft();crisis=false;render()}
 function setScale(k,n){draft[k]=draft[k]===n?null:n;render()}
 function saveRec(){
-  const empty=FIELDS.every(([k])=>!num(draft[k]))&&draft.loop===null&&!num(draft.sleep)&&!draft.med&&!draft.note.trim();
+  const hasMedChecks=Object.values(draft.medChecks||{}).some(Boolean);
+  const empty=FIELDS.every(([k])=>!num(draft[k]))&&draft.loop===null&&!num(draft.sleep)&&!draft.med&&!hasMedChecks&&!draft.note.trim();
   if(empty){toast('何も入力されていません');return}
-  data.records[cur]=Object.assign({},draft,{note:draft.note.trim()});
+  data.records[cur]=Object.assign({},draft,{note:draft.note.trim(),medChecks:Object.assign({},draft.medChecks||{})});
   persist();
   crisis=/死にたい|消えたい|消えてしまいたい|いなくなりたい|自殺/.test(draft.note);
   toast('保存しました');
@@ -194,18 +395,73 @@ function saveRec(){
 }
 
 /* ---------- 履歴 ---------- */
+function medMatrixHtml(){
+  if(!data.medList.length)return '';
+  const t=today();
+  const days=[];
+  for(let i=6;i>=0;i--)days.push(addDays(t,-i));
+  return `
+  <section class="card">
+    <h2>お薬チェック表（直近7日）</h2>
+    <p class="mu">マスをタップすると「飲めた（✓）」を切り替えられます。</p>
+    <div class="med-table-wrap">
+      <table class="med-table">
+        <thead>
+          <tr>
+            <th>薬名</th>
+            ${days.map(d=>`<th>${fmt(d)}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${data.medList.map((m,mi)=>`
+            <tr>
+              <td class="med-name-cell">${esc(m)}</td>
+              ${days.map(d=>{
+                const r=data.records[d];
+                const done=!!(r&&r.medChecks&&r.medChecks[m]);
+                return `<td><button class="med-cell-btn ${done?'done':''}" aria-label="${esc(d+' '+m)}" onclick="toggleHistMed('${d}',${mi})">${done?'✓':'−'}</button></td>`;
+              }).join('')}
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </section>`;
+}
+function toggleHistMed(d,mi){
+  const m=data.medList[mi];
+  if(!m)return;
+  if(!data.records[d])data.records[d]=blank();
+  if(!data.records[d].medChecks)data.records[d].medChecks={};
+  const next=!data.records[d].medChecks[m];
+  data.records[d].medChecks[m]=next;
+  if(next&&!data.records[d].med)data.records[d].med='飲めた';
+  persist();
+  if(d===cur)loadDraft();
+  render();
+}
 function vHist(){
   const ds=Object.keys(data.records).sort().reverse();
-  if(!ds.length)return `<section class="card"><h2>まだ記録がありません</h2><p class="mu">「記録」タブから、今日の分を入力してみましょう。</p><button class="btn pri" onclick="go('rec')">今日の記録をつける</button></section>`;
-  return `<p class="mu">記録 ${ds.length}日分</p>`+ds.map(d=>{const r=data.records[d];
+  const matrix=medMatrixHtml();
+  if(!ds.length)return `${matrix}<section class="card"><h2>まだ記録がありません</h2><p class="mu">「記録」タブから、今日の分を入力してみましょう。</p><button class="btn pri" onclick="go('rec')">今日の記録をつける</button></section>`;
+  return `${matrix}<p class="mu">記録 ${ds.length}日分</p>`+ds.map(d=>{const r=data.records[d];
     const v=x=>num(x)?x:'−';
+    const checkedMeds=data.medList.filter(m=>r.medChecks&&r.medChecks[m]);
+    const medSummary=checkedMeds.length?`（${checkedMeds.map(esc).join('・')}）`:'';
     return `<section class="card"><div class="hist-hd"><b class="hist-date">${d.replace(/-/g,'/')}</b>
       <button class="btn edit-btn" onclick="editRec('${d}')">編集</button><button class="btn del del-sm" onclick="delRec('${d}')">削除</button></div>
-      <p class="mu">全体的なつらさ ${v(r.distress)}／不安 ${v(r.anxiety)}／気分 ${v(r.mood)}／胃 ${v(r.stomach)}／睡眠 ${num(r.sleep)?r.sleep+'h':'−'}／薬 ${r.med||'−'}</p>
+      <p class="mu">全体的なつらさ ${v(r.distress)}／不安 ${v(r.anxiety)}／気分 ${v(r.mood)}／胃 ${v(r.stomach)}／睡眠 ${num(r.sleep)?r.sleep+'h':'−'}／薬 ${r.med||'−'}${medSummary}</p>
       ${r.note?`<p style="margin:0;font-size:16px">「${esc(r.note)}」</p>`:''}</section>`}).join('');
 }
 function editRec(d){cur=d;loadDraft();crisis=false;go('rec')}
-function delRec(d){if(!confirm('本当に消しますか？'))return;delete data.records[d];delete data.share[d];persist();render()}
+function delRec(d){
+  openModal(`${d.replace(/-/g,'/')} の記録を本当に消しますか？`,'削除する',true,()=>{
+    delete data.records[d];
+    delete data.share[d];
+    persist();
+    render();
+    toast('削除しました');
+  });
+}
 
 /* ---------- レポート ---------- */
 function period(){
@@ -225,6 +481,10 @@ function reportText(){
     return `${a.n?a.avg+'（'+a.n+'日分）':'記録なし'} → ${b.n?b.avg+'（'+b.n+'日分）':'記録なし'}`};
   const loopA=recs.filter(r=>typeof r.loop==='boolean'),loopY=loopA.filter(r=>r.loop);
   const medA=recs.filter(r=>r.med),taken=medA.filter(r=>r.med==='飲めた'),missed=medA.filter(r=>r.med==='飲み忘れた');
+  const medCheckLines=data.medList.map(m=>{
+    const cnt=recs.filter(r=>r.medChecks&&r.medChecks[m]).length;
+    return `・${m}：チェック ${cnt}日 / 期間${p.n}日`;
+  });
   const none=[];
   FIELDS.forEach(([k,l])=>{if(!stat(recs,k).n)none.push(l)});
   if(!stat(recs,'sleep').n)none.push('睡眠時間');if(!loopA.length)none.push('思考ループ');if(!medA.length)none.push('服薬');
@@ -239,6 +499,7 @@ function reportText(){
 ``,`■睡眠`,line('睡眠時間',stat(recs,'sleep'),'時間'),`・前半→後半：${half('sleep')}`,
 ``,`■服薬`,medA.length?`・飲めた${taken.length}日／飲み忘れ${missed.length}日（回答${medA.length}日分）`:'・記録なし',
 ...(missed.length?[`・飲み忘れ日：${missed.map(r=>fmt(r.d)).join('、')}`]:[]),
+...medCheckLines,
 ``,`■本人メモ（共有を選んだもの）`,...(notes.length?notes.map(r=>`・${fmt(r.d)}「${r.note}」`):['・なし']),
 ``,`■医師に質問したいこと`,data.questions.trim()||'（未記入）',
 ``,`■期間中に記録がなかった項目`,none.length?none.join('、'):'なし'
@@ -310,7 +571,38 @@ function copyRep(){
 }
 
 /* ---------- 設定 ---------- */
-function vSet(){return `
+function vSet(){
+  const notifSupported=typeof Notification!=='undefined';
+  const notifPerm=notifSupported?Notification.permission:'unsupported';
+  return `
+  <section class="card"><h2>リマインド設定</h2>
+    <p class="mu">設定した時刻を過ぎると、アプリを開いたときに上部にリマインドが表示されます。スマホのカレンダーに登録すると、毎日通知を受け取れます。</p>
+    <div class="switch-row">
+      <label for="rem-rec-on">体調記録のリマインド</label>
+      <input id="rem-rec-on" type="checkbox" class="chk-box switch-input" ${data.reminder.enabled?'checked':''} onchange="data.reminder.enabled=this.checked;data.reminder.dismissedDate='';persist();render()">
+    </div>
+    ${data.reminder.enabled?`<div class="row"><span class="mu">記録の時刻</span><input type="time" value="${esc(data.reminder.time)}" onchange="data.reminder.time=this.value||'21:00';data.reminder.dismissedDate='';persist();toast('リマインド時刻を保存しました')"></div>`:''}
+    <div class="switch-row">
+      <label for="rem-med-on">お薬チェックのリマインド</label>
+      <input id="rem-med-on" type="checkbox" class="chk-box switch-input" ${data.reminder.medEnabled?'checked':''} onchange="data.reminder.medEnabled=this.checked;data.reminder.dismissedDate='';persist();render()">
+    </div>
+    ${data.reminder.medEnabled?`<div class="row"><span class="mu">お薬の時刻</span><input type="time" value="${esc(data.reminder.medTime)}" onchange="data.reminder.medTime=this.value||'08:00';data.reminder.dismissedDate='';persist();toast('お薬リマインド時刻を保存しました')"></div>`:''}
+    <div class="row">
+      ${notifSupported?`<button class="btn" onclick="reqNotif()">${notifPerm==='granted'?'通知：許可済み':'通知を許可する'}</button>`:''}
+      <button class="btn" onclick="testReminder()">テスト表示</button>
+    </div>
+    <button class="btn pri" onclick="downloadIcs()">カレンダーに毎日登録 (.ics)</button>
+  </section>
+  <section class="card"><h2>お薬リストの管理</h2>
+    <p class="mu">チェック表に表示する薬や時間帯を登録できます。</p>
+    <div class="med-chip-row">
+      ${data.medList.map((m,i)=>`<span class="med-chip">${esc(m)}<button aria-label="${esc(m)}を削除" onclick="removeMed(${i})">×</button></span>`).join('')||'<span class="mu">登録なし</span>'}
+    </div>
+    <div class="med-add-row">
+      <input id="set-med-new" type="text" placeholder="例：朝の薬、寝る前の薬">
+      <button class="btn" onclick="addMedFromSet()">追加</button>
+    </div>
+  </section>
   <section class="card"><h2>画面の明るさ</h2>
     <p class="mu">見やすい表示を選べます。</p>
     <div class="row">
@@ -332,9 +624,63 @@ function vSet(){return `
   <section class="card"><h2>バックアップ</h2>
     <p class="mu">データはこのブラウザ内だけにあります。ブラウザの履歴削除や機種変更で消えるため、ときどき書き出してください。</p>
     <button class="btn" onclick="exportData()">データを書き出す</button>
-    <label class="btn" style="display:flex;align-items:center;justify-content:center">データを読み込む<input type="file" accept="application/json" class="hidden" onchange="importData(this.files[0])"></label></section>
+    <label class="btn" style="display:flex;align-items:center;justify-content:center;cursor:pointer">データを読み込む<input type="file" accept="application/json" class="hidden" onchange="importData(this.files[0])"></label></section>
   <section class="card"><h2>すべて削除</h2><button class="btn del" onclick="wipe()">全データを削除する</button></section>
-  <details class="card"><summary><b>つらいときの相談先</b></summary>${crisisBody()}</details>`}
+  <details class="card"><summary><b>つらいときの相談先（タップで開く）</b></summary>${crisisBody()}</details>`;
+}
+function addMedFromSet(){
+  const inp=document.getElementById('set-med-new');
+  const val=(inp?inp.value:'').trim();
+  if(!val){toast('薬の名前を入力してください');return}
+  if(data.medList.includes(val)){toast('すでに登録されています');return}
+  data.medList.push(val);
+  persist();
+  toast('追加しました');
+  render();
+}
+function removeMed(idx){
+  data.medList.splice(idx,1);
+  persist();
+  render();
+}
+function reqNotif(){
+  if(typeof Notification==='undefined'){toast('この環境では通知に対応していません');return}
+  Notification.requestPermission().then(p=>{
+    toast(p==='granted'?'通知を許可しました':'通知が許可されませんでした');
+    render();
+  }).catch(()=>toast('通知設定を開けませんでした'));
+}
+function downloadIcs(){
+  const t=today().replace(/-/g,'');
+  const events=[];
+  const mkEv=(uid,hhmm,summary)=>{
+    const [hh,mm]=hhmm.split(':');
+    return [
+      'BEGIN:VEVENT',
+      `UID:${uid}@shinsatsu-memo`,
+      `DTSTART:${t}T${hh}${mm}00`,
+      `DURATION:PT10M`,
+      'RRULE:FREQ=DAILY',
+      `SUMMARY:${summary}`,
+      'BEGIN:VALARM',
+      'TRIGGER:PT0M',
+      'ACTION:DISPLAY',
+      `DESCRIPTION:${summary}`,
+      'END:VALARM',
+      'END:VEVENT'
+    ].join('\r\n');
+  };
+  if(data.reminder.enabled&&data.reminder.time)events.push(mkEv('rec',data.reminder.time,'診察メモAI：今日の体調を記録'));
+  if(data.reminder.medEnabled&&data.reminder.medTime)events.push(mkEv('med',data.reminder.medTime,'診察メモAI：お薬のチェック'));
+  if(!events.length)events.push(mkEv('rec',data.reminder.time||'21:00','診察メモAI：今日の体調を記録'));
+  const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//ShinsatsuMemoAI//JP',...events,'END:VCALENDAR'].join('\r\n');
+  const b=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(b);
+  a.download='shinsatsu-memo-reminder.ics';
+  a.click();
+  toast('カレンダーファイルを書き出しました');
+}
 function setTheme(t){
   data.theme=t;
   applyTheme();
@@ -349,13 +695,44 @@ function exportData(){
 function importData(f){
   if(!f)return;const r=new FileReader();
   r.onload=()=>{try{const s=JSON.parse(r.result);if(!s||typeof s.records!=='object')throw 0;
-    if(!confirm('今のデータを読み込んだデータで置き換えますか？'))return;
-    data=Object.assign({records:{},chief:'',questions:'',lastVisit:'',share:{},theme:'dark'},s);applyTheme();persist();loadDraft();toast('読み込みました');render()}
-    catch(e){toast('読み込めないファイルです')}};
+    openModal('今のデータを読み込んだデータで置き換えますか？','置き換える',false,()=>{
+      data=Object.assign(DEFAULT_DATA(),s);
+      if(!Array.isArray(data.medList))data.medList=['朝の薬','夜の薬'];
+      data.reminder=Object.assign({enabled:false,time:'21:00',medEnabled:false,medTime:'08:00',dismissedDate:''},s.reminder||{});
+      applyTheme();persist();loadDraft();toast('読み込みました');render();
+    });
+  }catch(e){toast('読み込めないファイルです')}};
   r.readAsText(f);
 }
-function wipe(){if(!confirm('すべての記録を削除します。元に戻せません。よろしいですか？'))return;
-  data={records:{},chief:'',questions:'',lastVisit:'',share:{},theme:data.theme||'dark'};persist();loadDraft();toast('削除しました');render()}
+function wipe(){
+  openModal('すべての記録を削除します。元に戻せません。よろしいですか？','すべて削除',true,()=>{
+    const keepTheme=data.theme||'dark';
+    data=DEFAULT_DATA();
+    data.theme=keepTheme;
+    persist();loadDraft();toast('削除しました');render();
+  });
+}
+
+function checkReminderTick(){
+  const t=today(),hm=nowHHMM();
+  const key=`${t}_${hm}`;
+  if(lastNotifiedKey===key)return;
+  const hitRec=data.reminder.enabled&&data.reminder.time===hm&&!data.records[t];
+  const todayRec=data.records[t];
+  const hasMed=todayRec&&todayRec.medChecks&&Object.values(todayRec.medChecks).some(Boolean);
+  const hitMed=data.reminder.medEnabled&&data.reminder.medTime===hm&&!hasMed;
+  if(hitRec||hitMed){
+    lastNotifiedKey=key;
+    const msg=hitRec?'今日の体調を記録する時間です':'お薬をチェックする時間です';
+    toast(msg);
+    render();
+    if(typeof Notification!=='undefined'&&Notification.permission==='granted'){
+      try{new Notification('診察メモAI',{body:msg})}catch(e){}
+    }
+  }
+}
+if(window._remTimer)clearInterval(window._remTimer);
+window._remTimer=setInterval(checkReminderTick,30000);
 
 render();
 </script>
